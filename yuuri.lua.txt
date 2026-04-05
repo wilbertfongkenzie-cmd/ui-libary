@@ -1574,6 +1574,284 @@ function ClaudeUI._TabAPI:_o()
 	return self._order
 end
 
+function ClaudeUI._TabAPI:AddKeybind(label, defaultKey, callback, opts)
+    opts = opts or {}
+    local keybind = defaultKey or "F"
+    local listening = false
+    local listeningConnection = nil
+    
+    local container = inst("Frame", {
+        Size = UDim2.new(1, 0, 0, 48),
+        BackgroundColor3 = T.Surface,
+        BorderSizePixel = 0,
+        LayoutOrder = opts.Order or self:_o(),
+        ZIndex = 4,
+        Parent = self._inner,
+    })
+    corner(container, 5)
+    mkStroke(container, T.Border, 1)
+    mkPad(container, 0, 14, 0, 12)
+    
+    local iconW = 0
+    local iconImg = mkIcon(container, opts.Icon or "command", 14, T.TextSecondary, 6, Vector2.new(0, 0.5), UDim2.new(0, 12, 0.5, 0))
+    if iconImg then iconW = 14 + 8 end
+    
+    inst("TextLabel", {
+        Size = UDim2.new(1, -(iconW + 100), 1, 0),
+        Position = UDim2.new(0, iconW, 0, 0),
+        BackgroundTransparency = 1,
+        Text = label,
+        TextColor3 = T.TextPrimary,
+        TextSize = 13,
+        Font = Enum.Font.Gotham,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 5,
+        Parent = container,
+    })
+    
+    local keyButton = inst("TextButton", {
+        Size = UDim2.new(0, 80, 0, 28),
+        Position = UDim2.new(1, -90, 0.5, -14),
+        BackgroundColor3 = T.SurfaceActive,
+        Text = keybind,
+        TextColor3 = T.TextPrimary,
+        TextSize = 12,
+        Font = Enum.Font.GothamMedium,
+        BorderSizePixel = 0,
+        AutoButtonColor = false,
+        ZIndex = 6,
+        Parent = container,
+    })
+    corner(keyButton, 5)
+    mkStroke(keyButton, T.Border, 1)
+    
+    local function stopListening()
+        if listeningConnection then
+            listeningConnection:Disconnect()
+            listeningConnection = nil
+        end
+        listening = false
+        keyButton.Text = keybind
+        tw(keyButton, fast, { BackgroundColor3 = T.SurfaceActive })
+    end
+    
+    local function startListening()
+        if listening then
+            stopListening()
+            return
+        end
+        
+        listening = true
+        keyButton.Text = "..."
+        tw(keyButton, fast, { BackgroundColor3 = T.Primary })
+        
+        listeningConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+            if gameProcessed then return end
+            
+            local newKey = nil
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                newKey = input.KeyCode.Name
+            elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
+                newKey = "MouseLeft"
+            elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+                newKey = "MouseRight"
+            end
+            
+            if newKey then
+                keybind = newKey
+                stopListening()
+                if callback then callback(keybind) end
+            end
+        end)
+        
+        task.delay(5, function()
+            if listening then stopListening() end
+        end)
+    end
+    
+    keyButton.MouseButton1Click:Connect(startListening)
+    
+    keyButton.MouseEnter:Connect(function()
+        if not listening then
+            tw(keyButton, fast, { BackgroundColor3 = T.SurfaceHover })
+        end
+    end)
+    keyButton.MouseLeave:Connect(function()
+        if not listening then
+            tw(keyButton, fast, { BackgroundColor3 = T.SurfaceActive })
+        end
+    end)
+    
+    return {
+        Get = function() return keybind end,
+        Set = function(k) keybind = k; keyButton.Text = keybind end,
+    }
+end
+
+function ClaudeUI._TabAPI:AddKeybindToggle(label, defaultKey, defaultState, callback, opts)
+    opts = opts or {}
+    local state = defaultState or false
+    local keybind = defaultKey or "F"
+    local listening = false
+    
+    local container = inst("Frame", {
+        Size = UDim2.new(1, 0, 0, 56),
+        BackgroundColor3 = T.Surface,
+        BorderSizePixel = 0,
+        LayoutOrder = opts.Order or self:_o(),
+        ZIndex = 4,
+        Parent = self._inner,
+    })
+    corner(container, 5)
+    mkStroke(container, T.Border, 1)
+    mkPad(container, 0, 14, 0, 12)
+    
+    local iconW = 0
+    local iconImg = mkIcon(container, opts.Icon, 14, T.TextSecondary, 6, Vector2.new(0, 0.5), UDim2.new(0, 12, 0.5, 0))
+    if iconImg then iconW = 14 + 8 end
+    
+    inst("TextLabel", {
+        Size = UDim2.new(1, -(iconW + 100), 1, 0),
+        Position = UDim2.new(0, iconW, 0, 0),
+        BackgroundTransparency = 1,
+        Text = label,
+        TextColor3 = T.TextPrimary,
+        TextSize = 13,
+        Font = Enum.Font.Gotham,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 5,
+        Parent = container,
+    })
+    
+    local keyButton = inst("TextButton", {
+        Size = UDim2.new(0, 80, 0, 24),
+        Position = UDim2.new(1, -90, 0.3, -12),
+        BackgroundColor3 = T.SurfaceActive,
+        Text = keybind,
+        TextColor3 = T.TextPrimary,
+        TextSize = 11,
+        Font = Enum.Font.GothamMedium,
+        BorderSizePixel = 0,
+        AutoButtonColor = false,
+        ZIndex = 6,
+        Parent = container,
+    })
+    corner(keyButton, 4)
+    mkStroke(keyButton, T.Border, 1)
+    
+    local TW, TH = 46, 24
+    local track = inst("Frame", {
+        Size = UDim2.new(0, TW, 0, TH),
+        Position = UDim2.new(1, -TW, 0.7, -TH/2),
+        BackgroundColor3 = state and T.ToggleOn or Color3.fromRGB(30, 30, 30),
+        BorderSizePixel = 0,
+        ZIndex = 5,
+        Parent = container,
+    })
+    corner(track, TH/2)
+    
+    local KS = TH - 6
+    local knob = inst("Frame", {
+        Size = UDim2.new(0, KS, 0, KS),
+        Position = UDim2.new(0, state and (TW - KS - 3) or 3, 0.5, -KS/2),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BorderSizePixel = 0,
+        ZIndex = 6,
+        Parent = track,
+    })
+    corner(knob, KS/2)
+    
+    local function setState(v)
+        state = v
+        if state then
+            tw(track, fast, { BackgroundColor3 = T.ToggleOn })
+            tw(knob, fast, { Position = UDim2.new(0, TW - KS - 3, 0.5, -KS/2) })
+        else
+            tw(track, fast, { BackgroundColor3 = Color3.fromRGB(30, 30, 30) })
+            tw(knob, fast, { Position = UDim2.new(0, 3, 0.5, -KS/2) })
+        end
+        if callback then callback(state, keybind) end
+    end
+    
+    local function startListening()
+        if listening then
+            listening = false
+            keyButton.Text = keybind
+            tw(keyButton, fast, { BackgroundColor3 = T.SurfaceActive })
+            return
+        end
+        
+        listening = true
+        keyButton.Text = "..."
+        tw(keyButton, fast, { BackgroundColor3 = T.Primary })
+        
+        local conn = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+            if gameProcessed or not listening then return end
+            
+            local newKey = nil
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                newKey = input.KeyCode.Name
+            elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
+                newKey = "MouseLeft"
+            elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+                newKey = "MouseRight"
+            end
+            
+            if newKey then
+                keybind = newKey
+                listening = false
+                keyButton.Text = keybind
+                tw(keyButton, fast, { BackgroundColor3 = T.SurfaceActive })
+                conn:Disconnect()
+                if callback then callback(state, keybind) end
+            end
+        end)
+        
+        task.delay(5, function()
+            if listening then
+                listening = false
+                keyButton.Text = keybind
+                tw(keyButton, fast, { BackgroundColor3 = T.SurfaceActive })
+                conn:Disconnect()
+            end
+        end)
+    end
+    
+    keyButton.MouseButton1Click:Connect(startListening)
+    keyButton.MouseEnter:Connect(function()
+        if not listening then tw(keyButton, fast, { BackgroundColor3 = T.SurfaceHover }) end
+    end)
+    keyButton.MouseLeave:Connect(function()
+        if not listening then tw(keyButton, fast, { BackgroundColor3 = T.SurfaceActive }) end
+    end)
+    
+    track.MouseButton1Click:Connect(function() setState(not state) end)
+    
+    local globalConn = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed or listening then return end
+        
+        local pressedKey = nil
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            pressedKey = input.KeyCode.Name
+        elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
+            pressedKey = "MouseLeft"
+        elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+            pressedKey = "MouseRight"
+        end
+        
+        if pressedKey and pressedKey == keybind then
+            setState(not state)
+        end
+    end)
+    
+    return {
+        Get = function() return state, keybind end,
+        SetState = setState,
+        SetKeybind = function(k) keybind = k; keyButton.Text = keybind end,
+        Destroy = function() globalConn:Disconnect() end,
+    }
+end
+
 function ClaudeUI._TabAPI:AddLabel(text, opts)
 	opts = opts or {}
 	return inst("TextLabel", {
@@ -2257,292 +2535,6 @@ function ClaudeUI:Toast(message, kind, duration)
 		task.delay(0.25, function() toast:Destroy() end)
 	end)
 	return toast
-end
-
-function ClaudeUI._TabAPI:AddKeybindPicker(label, defaultKey, callback, opts)
-    opts = opts or {}
-    local currentKey = defaultKey or "None"
-    local listening = false
-    
-    local HDR_H = 36
-    local container = inst("Frame", {
-        Size = UDim2.new(1, 0, 0, HDR_H),
-        BackgroundColor3 = T.Surface,
-        BorderSizePixel = 0,
-        ClipsDescendants = true,
-        LayoutOrder = opts.Order or self:_o(),
-        ZIndex = 4,
-        Parent = self._inner,
-    })
-    corner(container, 5)
-    local stroke = mkStroke(container, T.Border, 1)
-    
-    -- Icon
-    local iconW = 0
-    if opts.Icon then
-        local ico = mkIcon(container, opts.Icon, 14, Color3.fromRGB(255, 255, 255), 7, Vector2.new(0, 0.5), UDim2.new(0, 10, 0, HDR_H / 2))
-        if ico then iconW = 10 + 14 + 6 end
-    end
-    
-    local LEFT = (iconW > 0 and iconW or 10)
-    
-    -- Label
-    local labelLbl = inst("TextLabel", {
-        Size = UDim2.new(1, -(LEFT + 100), 0, 14),
-        Position = UDim2.new(0, LEFT, 0, 5),
-        BackgroundTransparency = 1,
-        Text = label,
-        TextColor3 = Color3.fromRGB(225, 225, 225),
-        TextSize = 12,
-        Font = Enum.Font.GothamMedium,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextTruncate = Enum.TextTruncate.AtEnd,
-        ZIndex = 7,
-        Parent = container,
-    })
-    
-    -- Subtitle
-    if opts.Subtitle then
-        inst("TextLabel", {
-            Size = UDim2.new(1, -(LEFT + 100), 0, 12),
-            Position = UDim2.new(0, LEFT, 0, 21),
-            BackgroundTransparency = 1,
-            Text = opts.Subtitle,
-            TextColor3 = Color3.fromRGB(100, 100, 100),
-            TextSize = 10,
-            Font = Enum.Font.Gotham,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            TextTruncate = Enum.TextTruncate.AtEnd,
-            ZIndex = 7,
-            Parent = container,
-        })
-    end
-    
-    -- Key display button
-    local keyBtn = inst("TextButton", {
-        Size = UDim2.new(0, 80, 0, 28),
-        Position = UDim2.new(1, -90, 0.5, -14),
-        BackgroundColor3 = Color3.fromRGB(45, 45, 45),
-        Text = currentKey,
-        TextColor3 = T.TextPrimary,
-        TextSize = 12,
-        Font = Enum.Font.GothamMedium,
-        BorderSizePixel = 0,
-        AutoButtonColor = false,
-        ZIndex = 7,
-        Parent = container,
-    })
-    corner(keyBtn, 6)
-    local keyStroke = mkStroke(keyBtn, T.Border, 1)
-    
-    -- Listening indicator overlay
-    local listeningOverlay = inst("Frame", {
-        Size = UDim2.new(1, 0, 1, 0),
-        Position = UDim2.new(0, 0, 0, 0),
-        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-        BackgroundTransparency = 0.7,
-        Visible = false,
-        ZIndex = 10,
-        Parent = container,
-    })
-    corner(listeningOverlay, 5)
-    
-    local listeningText = inst("TextLabel", {
-        Size = UDim2.new(1, 0, 1, 0),
-        BackgroundTransparency = 1,
-        Text = "Press any key...",
-        TextColor3 = T.Primary,
-        TextSize = 13,
-        Font = Enum.Font.GothamBold,
-        ZIndex = 11,
-        Parent = listeningOverlay,
-    })
-    
-    -- Clear button (small X)
-    local clearBtn = inst("TextButton", {
-        Size = UDim2.new(0, 24, 0, 24),
-        Position = UDim2.new(1, -24, 0.5, -12),
-        BackgroundColor3 = T.Surface,
-        Text = "✕",
-        TextColor3 = T.TextMuted,
-        TextSize = 11,
-        Font = Enum.Font.Gotham,
-        BorderSizePixel = 0,
-        AutoButtonColor = false,
-        Visible = (currentKey ~= "None"),
-        ZIndex = 7,
-        Parent = container,
-    })
-    corner(clearBtn, 4)
-    
-    -- Helper: Get readable key name
-    local function getKeyName(inputObject)
-        if inputObject.KeyCode ~= Enum.KeyCode.Unknown then
-            local name = tostring(inputObject.KeyCode):gsub("Enum%.KeyCode%.", "")
-            -- Common replacements
-            local replacements = {
-                LeftControl = "Ctrl", RightControl = "Ctrl",
-                LeftAlt = "Alt", RightAlt = "Alt",
-                LeftShift = "Shift", RightShift = "Shift",
-                LeftCommand = "Cmd", RightCommand = "Cmd",
-                Backspace = "⌫", Delete = "Del",
-                Insert = "Ins", Return = "Enter",
-                Space = "Space", Tab = "Tab",
-                Escape = "Esc", CapsLock = "Caps",
-                PageUp = "PgUp", PageDown = "PgDn",
-                Home = "Home", End = "End",
-                Up = "↑", Down = "↓", Left = "←", Right = "→",
-            }
-            return replacements[name] or name
-        elseif inputObject.UserInputType == Enum.UserInputType.MouseButton1 then
-            return "LMB"
-        elseif inputObject.UserInputType == Enum.UserInputType.MouseButton2 then
-            return "RMB"
-        elseif inputObject.UserInputType == Enum.UserInputType.MouseButton3 then
-            return "MMB"
-        end
-        return "None"
-    end
-    
-    -- Update UI
-    local function updateKeyDisplay(keyName)
-        currentKey = keyName
-        keyBtn.Text = currentKey
-        clearBtn.Visible = (currentKey ~= "None")
-        
-        if listening then
-            listening = false
-            tw(listeningOverlay, fast, { BackgroundTransparency = 1 })
-            listeningOverlay.Visible = false
-            tw(keyBtn, fast, { BackgroundColor3 = Color3.fromRGB(45, 45, 45) })
-            tw(keyStroke, fast, { Color = T.Border })
-        end
-        
-        if callback then
-            callback(currentKey)
-        end
-    end
-    
-    -- Connection references
-    local inputBeganConn = nil
-    local inputEndedConn = nil
-    
-    -- Start listening for key press
-    local function startListening()
-        if listening then return end
-        listening = true
-        
-        listeningOverlay.Visible = true
-        listeningOverlay.BackgroundTransparency = 0.7
-        tw(listeningOverlay, fast, { BackgroundTransparency = 0.7 })
-        tw(keyBtn, fast, { BackgroundColor3 = T.Primary })
-        tw(keyStroke, fast, { Color = T.Primary })
-        
-        -- Disconnect existing connections
-        if inputBeganConn then inputBeganConn:Disconnect() end
-        if inputEndedConn then inputEndedConn:Disconnect() end
-        
-        -- Listen for key press
-        inputBeganConn = UserInputService.InputBegan:Connect(function(input, gameProcessed)
-            if gameProcessed then return end
-            
-            local keyName = getKeyName(input)
-            if keyName and keyName ~= "None" then
-                updateKeyDisplay(keyName)
-            end
-        end)
-        
-        -- Listen for mouse button (if we want to allow mouse binds)
-        if opts.AllowMouse then
-            inputEndedConn = UserInputService.InputEnded:Connect(function(input, gameProcessed)
-                if gameProcessed then return end
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or
-                   input.UserInputType == Enum.UserInputType.MouseButton2 or
-                   input.UserInputType == Enum.UserInputType.MouseButton3 then
-                    local keyName = getKeyName(input)
-                    if keyName and keyName ~= "None" then
-                        updateKeyDisplay(keyName)
-                    end
-                end
-            end)
-        end
-    end
-    
-    -- Cancel listening
-    local function cancelListening()
-        if not listening then return end
-        listening = false
-        
-        tw(listeningOverlay, fast, { BackgroundTransparency = 1 })
-        task.delay(0.15, function()
-            if not listening then
-                listeningOverlay.Visible = false
-            end
-        end)
-        tw(keyBtn, fast, { BackgroundColor3 = Color3.fromRGB(45, 45, 45) })
-        tw(keyStroke, fast, { Color = T.Border })
-        
-        if inputBeganConn then inputBeganConn:Disconnect() end
-        if inputEndedConn then inputEndedConn:Disconnect() end
-        inputBeganConn = nil
-        inputEndedConn = nil
-    end
-    
-    -- Key button click
-    keyBtn.MouseButton1Click:Connect(function()
-        if listening then
-            cancelListening()
-        else
-            startListening()
-        end
-    end)
-    
-    -- Clear button click
-    clearBtn.MouseButton1Click:Connect(function()
-        cancelListening()
-        updateKeyDisplay("None")
-    end)
-    
-    -- Hover effects
-    keyBtn.MouseEnter:Connect(function()
-        if not listening then
-            tw(keyBtn, fast, { BackgroundColor3 = Color3.fromRGB(55, 55, 55) })
-        end
-    end)
-    keyBtn.MouseLeave:Connect(function()
-        if not listening then
-            tw(keyBtn, fast, { BackgroundColor3 = Color3.fromRGB(45, 45, 45) })
-        end
-    end)
-    
-    clearBtn.MouseEnter:Connect(function()
-        if currentKey ~= "None" then
-            tw(clearBtn, fast, { BackgroundColor3 = T.Primary, TextColor3 = T.PrimaryText })
-        end
-    end)
-    clearBtn.MouseLeave:Connect(function()
-        if currentKey ~= "None" then
-            tw(clearBtn, fast, { BackgroundColor3 = T.Surface, TextColor3 = T.TextMuted })
-        end
-    end)
-    
-    -- Cleanup on destroy
-    container.Destroying:Connect(function()
-        if inputBeganConn then inputBeganConn:Disconnect() end
-        if inputEndedConn then inputEndedConn:Disconnect() end
-    end)
-    
-    -- Return API
-    return {
-        Get = function() return currentKey end,
-        Set = function(keyName)
-            if keyName == nil or keyName == "" then keyName = "None" end
-            updateKeyDisplay(keyName)
-        end,
-        StartListening = startListening,
-        StopListening = cancelListening,
-        IsListening = function() return listening end,
-    }
 end
 
 function ClaudeUI:Destroy()
