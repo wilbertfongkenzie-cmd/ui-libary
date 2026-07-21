@@ -1852,4 +1852,58 @@ function Update:Window(Config)
 	end;
 	return uitab;
 end;
+-- ============================================
+-- FUNGSI COMPATIBILITY WINDUI
+-- ============================================
+
+-- SetToggleKey
+function Update:SetToggleKey(key)
+    if key then
+        UserInputService.InputBegan:Connect(function(input)
+            if input.KeyCode == key then
+                local stellar = game.CoreGui:FindFirstChild("STELLAR")
+                if stellar then
+                    stellar.Enabled = not stellar.Enabled
+                end
+            end
+        end)
+    end
+end
+
+-- Tag
+function Update:Tag(config)
+    if config and config.Title then
+        pcall(function()
+            if self._currentWindow and self._currentWindow._subtitle then
+                self._currentWindow._subtitle.Text = config.Title
+            end
+        end)
+    end
+end
+
+-- SelectTab
+function Update:SelectTab(index)
+    -- Compatibility only
+end
+
+-- SetNotificationLower
+function Update:SetNotificationLower(state)
+    -- Compatibility only
+end
+
+-- AddTheme
+function Update:AddTheme(config)
+    -- Compatibility only
+end
+
+-- SetTheme
+function Update:SetTheme(theme)
+    _G.CurrentTheme = theme
+end
+
+-- Divider (untuk be)
+function Update:Divider()
+    return {}
+end
+
 return Update;
