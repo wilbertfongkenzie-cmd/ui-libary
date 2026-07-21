@@ -54,6 +54,9 @@ end
 -- ============================================
 -- NOTIFICATION
 -- ============================================
+-- ============================================
+-- NOTIFICATION (FIXED)
+-- ============================================
 function WindUIWrapper:Notify(config)
     if type(config) == "string" then
         MoonLibrary:Notify(config)
@@ -63,6 +66,7 @@ function WindUIWrapper:Notify(config)
         if config.Icon then
             message = "[" .. config.Icon .. "] " .. message
         end
+        -- Panggil Notify dengan string, bukan tabel!
         MoonLibrary:Notify(message)
     end
 end
