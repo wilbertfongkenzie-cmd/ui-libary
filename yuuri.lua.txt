@@ -1,18 +1,29 @@
+-- ============================================
+-- MOONDIETY UI - WINDUI COMPATIBLE
+-- VERSION FINAL v1.0
+-- ============================================
+-- Cara pakai: SAMA PERSIS dengan WindUI!
+-- ============================================
+
 if (game:GetService("CoreGui")):FindFirstChild("STELLAR") and (game:GetService("CoreGui")):FindFirstChild("ScreenGui") then
 	(game:GetService("CoreGui")).STELLAR:Destroy();
 	(game:GetService("CoreGui")).ScreenGui:Destroy();
 end;
+
 _G.Primary = Color3.fromRGB(100, 100, 100);
 _G.Dark = Color3.fromRGB(22, 22, 26);
 _G.Third = Color3.fromRGB(255, 0, 0);
+
 function CreateRounded(Parent, Size)
 	local Rounded = Instance.new("UICorner");
 	Rounded.Name = "Rounded";
 	Rounded.Parent = Parent;
 	Rounded.CornerRadius = UDim.new(0, Size);
 end;
+
 local UserInputService = game:GetService("UserInputService");
 local TweenService = game:GetService("TweenService");
+
 function MakeDraggable(topbarobject, object)
 	local Dragging = nil;
 	local DragInput = nil;
@@ -49,9 +60,11 @@ function MakeDraggable(topbarobject, object)
 		end;
 	end);
 end;
+
 local ScreenGui = Instance.new("ScreenGui");
 ScreenGui.Parent = game.CoreGui;
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
+
 local OutlineButton = Instance.new("Frame");
 OutlineButton.Name = "OutlineButton";
 OutlineButton.Parent = ScreenGui;
@@ -61,6 +74,7 @@ OutlineButton.BackgroundTransparency = 0;
 OutlineButton.Position = UDim2.new(0, 10, 0, 10);
 OutlineButton.Size = UDim2.new(0, 50, 0, 50);
 CreateRounded(OutlineButton, 12);
+
 local ImageButton = Instance.new("ImageButton");
 ImageButton.Parent = OutlineButton;
 ImageButton.Position = UDim2.new(0.5, 0, 0.5, 0);
@@ -74,13 +88,16 @@ ImageButton.Image = "rbxassetid://133495621202705";
 ImageButton.AutoButtonColor = false;
 MakeDraggable(ImageButton, OutlineButton);
 CreateRounded(ImageButton, 10);
+
 ImageButton.MouseButton1Click:connect(function()
 	(game.CoreGui:FindFirstChild("STELLAR")).Enabled = not (game.CoreGui:FindFirstChild("STELLAR")).Enabled;
 end);
+
 local NotificationFrame = Instance.new("ScreenGui");
 NotificationFrame.Name = "NotificationFrame";
 NotificationFrame.Parent = game.CoreGui;
 NotificationFrame.ZIndexBehavior = Enum.ZIndexBehavior.Global;
+
 local NotificationList = {};
 local function RemoveOldestNotification()
 	if #NotificationList > 0 then
@@ -90,6 +107,7 @@ local function RemoveOldestNotification()
 		end);
 	end;
 end;
+
 spawn(function()
 	while wait() do
 		if #NotificationList > 0 then
@@ -98,6 +116,7 @@ spawn(function()
 		end;
 	end;
 end);
+
 local Update = {};
 
 -- ============================================
@@ -105,7 +124,6 @@ local Update = {};
 -- ============================================
 function Update:Notify(config)
 	if type(config) == "string" then
-		-- Notify string biasa
 		local desc = config;
 		local Frame = Instance.new("Frame");
 		local Image = Instance.new("ImageLabel");
@@ -164,7 +182,6 @@ function Update:Notify(config)
 			title
 		});
 	elseif type(config) == "table" then
-		-- Support WindUI format: {Title = "...", Content = "..."}
 		local titleText = config.Title or ""
 		local contentText = config.Content or ""
 		local message = contentText
@@ -177,6 +194,9 @@ function Update:Notify(config)
 	end
 end;
 
+-- ============================================
+-- LOADING SCREEN
+-- ============================================
 function Update:StartLoad()
 	local Loader = Instance.new("ScreenGui");
 	Loader.Parent = game.CoreGui;
@@ -274,10 +294,15 @@ function Update:StartLoad()
 		end;
 	end);
 end;
+
+-- ============================================
+-- SETTINGS & CONFIG
+-- ============================================
 local SettingsLib = {
 	SaveSettings = true,
 	LoadAnimation = true
 };
+
 (getgenv()).LoadConfig = function()
 	if readfile and writefile and isfile and isfolder then
 		if not isfolder("STELLAR") then
@@ -299,6 +324,7 @@ local SettingsLib = {
 		return warn("Status : Undetected Executor");
 	end;
 end;
+
 (getgenv()).SaveConfig = function()
 	if readfile and writefile and isfile and isfolder then
 		if not isfile(("STELLAR/Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
@@ -315,13 +341,16 @@ end;
 		return warn("Status : Undetected Executor");
 	end;
 end;
+
 (getgenv()).LoadConfig();
+
 function Update:SaveSettings()
 	if SettingsLib.SaveSettings then
 		return true;
 	end;
 	return false;
 end;
+
 function Update:LoadAnimation()
 	if SettingsLib.LoadAnimation then
 		return true;
@@ -338,14 +367,12 @@ function Update:CreateWindow(Config)
 	local size = Config.Size or UDim2.new(0, 580, 0, 460);
 	local tabWidth = Config.SideBarWidth or 150;
 	
-	-- Panggil Window internal
 	local window = Update:Window({
 		SubTitle = subtitle,
 		Size = size,
 		TabWidth = tabWidth
 	});
 	
-	-- Set theme jika ada
 	if Config.Theme then
 		pcall(function()
 			Update:SetTheme(Config.Theme);
@@ -353,19 +380,6 @@ function Update:CreateWindow(Config)
 	end
 	
 	return window;
-end
-
--- ============================================
--- SET THEME
--- ============================================
-function Update:SetTheme(theme)
-	-- MOONDIETY tidak punya theme system bawaan
-	-- Tapi kita bisa simpan untuk referensi
-	_G.CurrentTheme = theme;
-end
-
-function Update:AddTheme(config)
-	-- MOONDIETY tidak punya theme system bawaan
 end
 
 -- ============================================
@@ -384,8 +398,63 @@ function Update:SetToggleKey(key)
 	end
 end
 
+-- ============================================
+-- SET THEME (COMPATIBILITY)
+-- ============================================
+function Update:SetTheme(theme)
+	_G.CurrentTheme = theme;
+end
+
+function Update:AddTheme(config)
+	-- Compatibility only
+end
+
 function Update:SetNotificationLower(state)
-	-- Tidak ada fungsi setara
+	-- Compatibility only
+end
+
+-- ============================================
+-- TAG (COMPATIBILITY)
+-- ============================================
+function Update:Tag(config)
+	if config and config.Title then
+		pcall(function()
+			local stellar = game.CoreGui:FindFirstChild("STELLAR")
+			if stellar then
+				local outlineMain = stellar:FindFirstChild("OutlineMain")
+				if outlineMain then
+					local main = outlineMain:FindFirstChild("Main")
+					if main then
+						local top = main:FindFirstChild("Top")
+						if top then
+							local nameHub = top:FindFirstChild("NameHub")
+							if nameHub then
+								local subtitle = nameHub:FindFirstChild("SubTitle")
+								if subtitle then
+									subtitle.Text = config.Title
+									return
+								end
+							end
+						end
+					end
+				end
+			end
+		end)
+	end
+end
+
+-- ============================================
+-- SELECT TAB (COMPATIBILITY)
+-- ============================================
+function Update:SelectTab(index)
+	-- Compatibility only
+end
+
+-- ============================================
+-- DIVIDER (COMPATIBILITY)
+-- ============================================
+function Update:Divider()
+	return {}
 end
 
 -- ============================================
@@ -1823,10 +1892,8 @@ function Update:Window(Config)
 			
 			local key = Enum.KeyCode[value] or Enum.KeyCode.Q;
 			
-			-- Tampilkan label keybind
 			self:Label("⌨️ " .. title .. ": " .. value);
 			
-			-- Simpan keybind
 			local connection = UserInputService.InputBegan:Connect(function(input)
 				if input.KeyCode == key then
 					callback();
@@ -1852,101 +1919,8 @@ function Update:Window(Config)
 	end;
 	return uitab;
 end;
--- ============================================
--- FUNGSI COMPATIBILITY WINDUI
--- ============================================
-
--- SetToggleKey
-function Update:SetToggleKey(key)
-    if key then
-        UserInputService.InputBegan:Connect(function(input)
-            if input.KeyCode == key then
-                local stellar = game.CoreGui:FindFirstChild("STELLAR")
-                if stellar then
-                    stellar.Enabled = not stellar.Enabled
-                end
-            end
-        end)
-    end
-end
-
--- Tag
-function Update:Tag(config)
-    if config and config.Title then
-        pcall(function()
-            if self._currentWindow and self._currentWindow._subtitle then
-                self._currentWindow._subtitle.Text = config.Title
-            end
-        end)
-    end
-end
-
--- SelectTab
-function Update:SelectTab(index)
-    -- Compatibility only
-end
-
--- SetNotificationLower
-function Update:SetNotificationLower(state)
-    -- Compatibility only
-end
-
--- AddTheme
-function Update:AddTheme(config)
-    -- Compatibility only
-end
-
--- SetTheme
-function Update:SetTheme(theme)
-    _G.CurrentTheme = theme
-end
-
--- Divider (untuk be)
-function Update:Divider()
-    return {}
-end
--- ============================================
--- TAG (COMPATIBILITY WINDUI)
--- ============================================
-function Update:Tag(config)
-    if config and config.Title then
-        pcall(function()
-            -- Cari subtitle dari STELLAR GUI langsung
-            local stellar = game.CoreGui:FindFirstChild("STELLAR")
-            if stellar then
-                local outlineMain = stellar:FindFirstChild("OutlineMain")
-                if outlineMain then
-                    local main = outlineMain:FindFirstChild("Main")
-                    if main then
-                        local top = main:FindFirstChild("Top")
-                        if top then
-                            local nameHub = top:FindFirstChild("NameHub")
-                            if nameHub then
-                                local subtitle = nameHub:FindFirstChild("SubTitle")
-                                if subtitle then
-                                    subtitle.Text = config.Title
-                                    return
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end)
-    end
-end
 
 -- ============================================
--- SELECT TAB (COMPATIBILITY)
+-- RETURN
 -- ============================================
-function Update:SelectTab(index)
-    -- Compatibility only
-end
-
--- ============================================
--- DIVIDER (COMPATIBILITY)
--- ============================================
-function Update:Divider()
-    return {}
-end
 return Update;
