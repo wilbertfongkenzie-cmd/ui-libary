@@ -1905,5 +1905,48 @@ end
 function Update:Divider()
     return {}
 end
+-- ============================================
+-- TAG (COMPATIBILITY WINDUI)
+-- ============================================
+function Update:Tag(config)
+    if config and config.Title then
+        pcall(function()
+            -- Cari subtitle dari STELLAR GUI langsung
+            local stellar = game.CoreGui:FindFirstChild("STELLAR")
+            if stellar then
+                local outlineMain = stellar:FindFirstChild("OutlineMain")
+                if outlineMain then
+                    local main = outlineMain:FindFirstChild("Main")
+                    if main then
+                        local top = main:FindFirstChild("Top")
+                        if top then
+                            local nameHub = top:FindFirstChild("NameHub")
+                            if nameHub then
+                                local subtitle = nameHub:FindFirstChild("SubTitle")
+                                if subtitle then
+                                    subtitle.Text = config.Title
+                                    return
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end
 
+-- ============================================
+-- SELECT TAB (COMPATIBILITY)
+-- ============================================
+function Update:SelectTab(index)
+    -- Compatibility only
+end
+
+-- ============================================
+-- DIVIDER (COMPATIBILITY)
+-- ============================================
+function Update:Divider()
+    return {}
+end
 return Update;
